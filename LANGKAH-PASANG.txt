@@ -1,0 +1,53 @@
+PASANG UPDATE WALL (mode grid + dashboard + moderasi + pengaturan frame)
+
+1. Backup dulu project-mu, terutama resources/views/gallery/index.blade.php.
+
+2. Salin file-file ini ke project (struktur foldernya sama).
+   Tanda [M] = bagian moderasi. Tanda [BARU] = berubah di paket terakhir ini
+   (wall otomatis tanpa refresh + pengaturan frame); salin ulang file-file itu.
+
+   app/Models/Pengaturan.php                                          [M] [BARU]
+   app/Events/PengaturanDiubah.php
+   app/Events/FotoBaru.php                 (menimpa yang lama)        [M]
+   app/Events/FotoDihapus.php              (sama dengan yang lama)
+   app/Observers/FotoObserver.php          (menimpa yang lama)        [M]
+   app/Http/Controllers/PengaturanController.php                      [M] [BARU]
+   app/Http/Controllers/FotoController.php (menimpa yang lama)        [BARU]
+   app/Http/Controllers/ModerasiController.php                        [M]
+   app/Http/Middleware/DashboardAuth.php
+   database/migrations/2026_11_16_000001_create_pengaturan_table.php
+   database/migrations/2026_11_16_000002_add_status_to_fotos_table.php [M]
+   resources/views/dashboard/index.blade.php                          [M] [BARU]
+   resources/views/moderasi/index.blade.php                           [M]
+   resources/views/gallery/index.blade.php (menimpa yang lama)        [BARU]
+
+3. routes/web.php: salin isi routes-tambahan.php ke dalamnya            [M]
+   (baris "use ..." taruh di bagian atas file).
+
+4. Dua perubahan kecil di file milikmu sendiri:                         [M]
+
+   a) app/Providers/AppServiceProvider.php, di dalam boot() pastikan ada:
+          \App\Models\Foto::observe(\App\Observers\FotoObserver::class);
+      Tanpa ini, moderasi tidak pernah menahan foto.
+
+   b) routes/web.php: hapus route lama
+          Route::delete('/fotos/{foto}', [FotoController::class, 'delete'])...
+      Route itu tidak dilindungi password, dan method delete sudah tidak ada
+      di FotoController yang baru. Hapus foto sekarang lewat halaman moderasi.
+
+   Frame: file frame tetap di public/frames/frame.png (PNG transparan 1200 x 1800 px).
+   Nyalakan atau matikan dari dashboard.
+
+5. Tambahkan ke .env (lewati kalau sudah):
+   DASHBOARD_USER=admin
+   DASHBOARD_PASSWORD=ganti_dengan_password_kamu
+
+6. Jalankan:
+   php artisan migrate
+   php artisan config:clear
+
+7. Buka:
+   Wall      : http://localhost:8000/gallery
+   Dashboard : http://localhost:8000/dashboard
+   Moderasi  : http://localhost:8000/moderasi
+   (dashboard dan moderasi login pakai user + password di .env)
